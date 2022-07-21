@@ -1,2 +1,2 @@
 # pymemoryapi
-Library that allow work with process memory.
+Simple fast library that allows to work with process memory.
