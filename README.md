@@ -1,2 +1,2 @@
 # pymemoryapi
-Simple fast library that allows to work with process memory.
+Простая быстрая библиотека для работы с оперативной памятью процесса / игры.
