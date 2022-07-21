@@ -20,13 +20,5 @@ print(f"handle: {discord_process.handle}")
 print(f"name: {discord_process.name}")
 print(f"pid: {discord_process.pid}")
 
-# Вывод:
-# ---------------
-# handle: 1356
-# name: Terraria.exe
-# pid: 23696
-
-# handle: 1840
-# name: Discord.exe
-# pid: 11064
 ```
+![Alt Image](https://media.discordapp.net/attachments/770327730570133524/999818711030562976/unknown.png)
