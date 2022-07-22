@@ -39,6 +39,7 @@ print(f"new address value: {process.read_float(some_address)}")
 ![Alt Image](https://media.discordapp.net/attachments/770327730570133524/999824443176124456/unknown.png)
 
 ![Alt Image](https://media.discordapp.net/attachments/770327730570133524/999825134632304680/unknown.png)
+
 Сканер паттернов
 ```python
 from time import time
