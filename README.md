@@ -103,4 +103,6 @@ health_hook = pymemoryapi.TrampolineHook(process, health_instruction, 18, 4096, 
 health_hook.insert_bytecode("C7 86 E4 03 00 00 39 05 00 00")
 
 ```
-
+![Alt Image](https://media.discordapp.net/attachments/770327730570133524/1000012062447120414/before_hook.png)
+![Alt Image](https://media.discordapp.net/attachments/770327730570133524/1000011528830992465/after_hook.png?width=1440&height=339)
+![Alt Image](https://media.discordapp.net/attachments/770327730570133524/1000012151727067156/hook.png)
