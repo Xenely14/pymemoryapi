@@ -79,3 +79,28 @@ print(f"KERNEL32.dll EntryPoint: {hex(kernel_module.EntryPoint)}")
 
 ```
 ![Alt Image](https://cdn.discordapp.com/attachments/770327730570133524/999823378401738772/unknown.png)
+
+Трамплин хуки
+```python
+# Бесконечные хп в Terraria
+
+import pymemoryapi
+
+process = pymemoryapi.Process(process_name="Terraria.exe")
+
+# Ищем инструкцию, которая записывает значение хп в цикле -> fild dword ptr [esi + 000003E4]
+health_instruction = process.raw_pattern_scan(0, 0xF0000000, "DB 86 E4 03 00 00 D9 5D F8 D9 45 F8", return_first_found=True)
+
+# Устанавливаем трамплин хук на инструкцию, длина инструкции - не менее 7 байтов с use_x64_registers=False, не менее 12 с use_x64_registers=True
+# mov eax, <address>
+# jmp eax
+# use_x64_registers = False - использование eax (представлено выше) для хранения адреса аллока, use_x64_registers = True - использование rax
+# Если игра не умеет обращаться с rax регисторм - используйте use_x64_registers = False
+health_hook = pymemoryapi.TrampolineHook(process, health_instruction, 18, 4096, use_x64_registers=False)
+
+# C7 86 E4 03 00 00 39 05 00 00 -> mov [esi + 000003E4], (int)1337
+# Для перевода байтов в строчный паттерн можно использовать метод pymemoryapi.heximate_bytes(bytes)
+health_hook.insert_bytecode("C7 86 E4 03 00 00 39 05 00 00")
+
+```
+
