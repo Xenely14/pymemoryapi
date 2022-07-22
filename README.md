@@ -106,3 +106,108 @@ health_hook.insert_bytecode("C7 86 E4 03 00 00 39 05 00 00")
 ![Alt Image](https://media.discordapp.net/attachments/770327730570133524/1000012062447120414/before_hook.png)
 ![Alt Image](https://media.discordapp.net/attachments/770327730570133524/1000011528830992465/after_hook.png?width=1440&height=339)
 ![Alt Image](https://media.discordapp.net/attachments/770327730570133524/1000012151727067156/hook.png)
+
+Прочие функции
+```python
+import pymemoryapi
+
+process = pymemoryapi.Process("notepad++.exe")
+
+print(pymemoryapi.list_processes_ids())
+# [0, 2560, ..., 11276]
+print(pymemoryapi.list_processes_names())
+# ['opera.exe', 'NVIDIA Share.exe', ...,  'Code.exe']
+print(pymemoryapi.list_processes())
+# [('opera.exe', 8704), ('NVIDIA Share.exe', 15880), ..., ('Code.exe', 18988)]
+print(pymemoryapi.list_modules(process.handle))
+# ['notepad++.exe', 'WINTRUST.dll', ..., 'ntdll.dll']
+
+print(pymemoryapi.heximate_bytes(pymemoryapi.mov_difference(0x02280016 - 0x27C52878)))
+# 9E D7 62 DA
+print(pymemoryapi.is_64_bit(process.handle))
+# True
+print(pymemoryapi.table_memory(process, 0x017995DC, 8, 36))
+# 17995DC | 55 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 1799600 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 EA DA 3E 84 41 EA 00 08 80 A5 84 CF
+# 1799624 | 80 A5 F4 CF 80 A5 54 CE 80 A5 24 CE 80 A5 E4 CF 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18
+# 1799648 | 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18
+# 179966C | 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18
+# 1799690 | 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 50 D0 B4 18 DC DA 3E B2 5F EA 00 08 41 63 4D 67 03 00 00 00 00 00 00 00
+# 17996B4 | 5C 00 57 00 49 00 4E 00 00 00 AC 01 60 D6 15 76 00 00 00 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 17996D8 | 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+print(hex(pymemoryapi.virtual_alloc_ex(process.handle, 4096)))
+# 0x15d0000
+memory_info = pymemoryapi.virtual_query_ex(process.handle, 0x15d0000)
+# Возвращает структуру
+# class MEMORY_BASIC_INFORMATION(ctypes.Structure):
+
+#     _fields_ = [
+#         ("BaseAddress", ctypes.c_ulonglong),
+#         ("AllocationBase", ctypes.c_ulonglong),
+#         ("AllocationProtect", ctypes.c_ulong),
+#         ("align1", ctypes.c_ulong),
+#         ("RegionSize", ctypes.c_ulonglong),
+#         ("State", ctypes.c_ulong),
+#         ("Protect", ctypes.c_ulong),
+#         ("Type", ctypes.c_ulong),
+#         ("align2", ctypes.c_ulong),
+#     ]
+print(hex(memory_info.BaseAddress))
+print(memory_info.RegionSize)
+# 0x15d0000
+# 4096
+
+```
+### Сравнение производительности с Pymem
+```python
+import pymemoryapi
+import pymem
+import time
+
+pymemoryapi_process = pymemoryapi.Process(process_name="Notepad++.exe")
+pymem_process = pymem.Pymem("Notepad++.exe")
+
+address = 0x06F667DC
+
+# Чтение (3кк итераций)
+start = time.time()
+for _ in range(3000000):
+    pymemoryapi_process.read_float(address)
+stop = time.time()
+print(f'pymemoryapi reading: {stop - start} sec')
+
+start = time.time()
+for _ in range(3000000):
+    pymem_process.read_float(address)
+stop = time.time()
+print(f'pymem reading: {stop - start} sec\n')
+
+# Запись (100к итераций)
+start = time.time()
+for _ in range(100000):
+    pymemoryapi_process.write_float(address, 20.0)
+stop = time.time()
+print(f'pymemoryapi writing: {stop - start} sec')
+
+start = time.time()
+for _ in range(100000):
+    pymem_process.write_float(address, 20.0)
+stop = time.time()
+print(f'pymem writing: {stop - start} sec\n')
+
+# Сканер паттернов
+start = time.time()
+pymemoryapi_process.pattern_scan(0, 0x90000000, "00 00 A0 41 00 00 00 00 D5 FF")
+stop = time.time()
+print(f'pymemoryapi pattern scanning: {stop - start} sec')
+
+start = time.time()
+scan_region = 0
+while scan_region < 0x90000000:
+    scan_region, founded_addresses = pymem.pattern.scan_pattern_page(pymem_process.process_handle, scan_region, b'\x00\x00\xA0\x41\x00\x00\x00\x00\xd5\xff')
+stop = time.time()
+print(f'pymem pattern scanning: {stop - start} sec')
+
+```
+![Alt Image](https://media.discordapp.net/attachments/770327730570133524/1000025656211537970/unknown.png)
